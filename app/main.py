@@ -3,6 +3,12 @@
 from datetime import datetime, timezone
 from html import escape
 from pathlib import Path
+import sys
+
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+if str(REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT))
 
 import streamlit as st
 from dotenv import load_dotenv
@@ -31,7 +37,7 @@ from engine.engineering import (
 )
 
 
-ROOT_DIR = Path(__file__).resolve().parents[1]
+ROOT_DIR = REPOSITORY_ROOT
 APEX_DATA_DIR = ROOT_DIR / "demo_data" / "apex_aerospace"
 ASSESSMENT_OUTPUT_DIR = ROOT_DIR / "generated_packages" / "assessments"
 IMPLEMENTATION_OUTPUT_DIR = ROOT_DIR / "generated_packages" / "implementation"
