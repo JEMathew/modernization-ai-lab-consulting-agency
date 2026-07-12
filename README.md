@@ -84,3 +84,9 @@ The resulting ZIP is stored under `generated_packages/implementation/` and can b
 - Package manifest
 
 All mappings, conversions, validations, and package contents are deterministic. Architecture, migration, and executive-summary narratives use the deterministic offline fallback; no OpenAI call is required.
+
+## Engagement 4: AI Agency Operations
+
+Engagement 4 is an operating view of the AI consulting agency, not an executive dashboard. After generating the implementation package, the application shows Hermes directing the Assessment, 6R, Prioritization, Engineering, and Validation specialists. Each agent reports status, task, confidence, start time, duration, result, and API cost, with separate agent and manager timelines.
+
+The live-replanning moment starts from the synthetic $8.5M budget. Click **Apply 30% Budget Reduction** to reduce the budget to $5.95M. Hermes reuses discovery, assessment, 6R recommendations, and the engineering package; only the prioritization planner and validation specialist rerun. The application stores the revised plan and displays the original plan, new plan, changes, rationale, and 14 hours of saved effort.

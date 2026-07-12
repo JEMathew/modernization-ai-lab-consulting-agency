@@ -1,10 +1,21 @@
 """Streamlit entry point for the Modernization AI Lab consulting engagement."""
 
+from datetime import datetime, timezone
 from pathlib import Path
 
 import streamlit as st
 from dotenv import load_dotenv
 
+from engine.agency import (
+    agent_timeline,
+    build_agent_operations,
+    create_plan,
+    executive_delivery_chain,
+    load_business_constraints,
+    manager_timeline,
+    replan_for_constraints,
+    store_replan_artifact,
+)
 from engine.assessment import (
     assess_portfolio,
     consulting_recommendation,
@@ -23,6 +34,18 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 APEX_DATA_DIR = ROOT_DIR / "demo_data" / "apex_aerospace"
 ASSESSMENT_OUTPUT_DIR = ROOT_DIR / "generated_packages" / "assessments"
 IMPLEMENTATION_OUTPUT_DIR = ROOT_DIR / "generated_packages" / "implementation"
+REPLAN_OUTPUT_DIR = ROOT_DIR / "generated_packages" / "replans"
+
+
+def request_agency_replan() -> None:
+    st.session_state["agency_replan_requested"] = True
+
+
+def apply_thirty_percent_reduction() -> None:
+    st.session_state["agency_budget"] = round(
+        float(st.session_state["agency_original_budget"]) * 0.70, 2
+    )
+    st.session_state["agency_replan_requested"] = True
 
 load_dotenv(ROOT_DIR / ".env")
 
@@ -72,6 +95,8 @@ else:
             st.session_state.pop("assessment_artifact", None)
             st.session_state.pop("engineering_engagement", None)
             st.session_state.pop("implementation_package", None)
+            st.session_state.pop("agency_replan", None)
+            st.session_state.pop("agency_replan_artifact", None)
         except DataLoadError as exc:
             st.session_state.pop("enterprise_profile", None)
             st.session_state.pop("portfolio", None)
@@ -132,6 +157,8 @@ if "enterprise_profile" in st.session_state and "portfolio" in st.session_state:
             st.session_state["assessment_artifact"] = str(artifact_path)
             st.session_state.pop("engineering_engagement", None)
             st.session_state.pop("implementation_package", None)
+            st.session_state.pop("agency_replan", None)
+            st.session_state.pop("agency_replan_artifact", None)
         except (RuntimeError, ValueError) as exc:
             st.session_state.pop("assessment", None)
             st.session_state.pop("assessment_artifact", None)
@@ -231,6 +258,8 @@ if "assessment" in st.session_state:
             )
             st.session_state["engineering_engagement"] = engineering_engagement
             st.session_state["implementation_package"] = str(implementation_package)
+            st.session_state.pop("agency_replan", None)
+            st.session_state.pop("agency_replan_artifact", None)
         except (DataLoadError, RuntimeError, ValueError) as exc:
             st.session_state.pop("engineering_engagement", None)
             st.session_state.pop("implementation_package", None)
@@ -380,3 +409,180 @@ if "engineering_engagement" in st.session_state:
         st.subheader("Decision Log")
         for index, decision in enumerate(engineering["decision_log"], start=1):
             st.write(f"{index}. {decision}")
+
+    st.divider()
+    st.header("AI Agency Operations")
+    st.caption(
+        "This is the operating view of the AI consulting agency—not an executive dashboard. "
+        "Hermes directs specialists, reuses approved evidence, and routes high-risk decisions "
+        "to human approval."
+    )
+
+    constraints = load_business_constraints(APEX_DATA_DIR / "business_constraints.json")
+    original_budget = float(constraints["annual_modernization_budget_usd"])
+    original_downtime = int(constraints["maximum_planned_downtime_hours"])
+    if "agency_original_budget" not in st.session_state:
+        st.session_state["agency_original_budget"] = original_budget
+    if "agency_budget" not in st.session_state:
+        st.session_state["agency_budget"] = original_budget
+    if "agency_downtime" not in st.session_state:
+        st.session_state["agency_downtime"] = original_downtime
+    if "agency_business_priority" not in st.session_state:
+        st.session_state["agency_business_priority"] = "Customer Analytics Continuity"
+    if "agency_start_time" not in st.session_state:
+        st.session_state["agency_start_time"] = datetime.now(timezone.utc).isoformat()
+    if "agency_replan_requested" not in st.session_state:
+        st.session_state["agency_replan_requested"] = False
+
+    agency_start = datetime.fromisoformat(st.session_state["agency_start_time"])
+    replanned = "agency_replan" in st.session_state
+    phase = "Adaptive Replanning Complete" if replanned else "Implementation Package Prepared"
+
+    with st.status(
+        f"Hermes is directing the agency · Current Engagement Phase: {phase}",
+        expanded=True,
+        state="complete",
+    ):
+        st.write("Specialists are coordinated through deterministic handoffs and stored artifacts.")
+        st.progress(1.0, text="Agency delivery evidence synchronized")
+
+    st.subheader("Visible Agent Team")
+    st.markdown(
+        "### Hermes\n↓\n### Assessment Specialist\n↓\n### 6R Specialist\n↓\n"
+        "### Prioritization Specialist\n↓\n### Engineering Specialist\n↓\n"
+        "### Validation Specialist"
+    )
+    st.dataframe(
+        build_agent_operations(agency_start, replanned=replanned),
+        width="stretch",
+        hide_index=True,
+    )
+
+    timeline_tabs = st.tabs(["Agent Timeline", "Manager Timeline"])
+    with timeline_tabs[0]:
+        st.dataframe(
+            agent_timeline(agency_start, replanned=replanned),
+            width="stretch",
+            hide_index=True,
+        )
+    with timeline_tabs[1]:
+        st.dataframe(
+            manager_timeline(agency_start, replanned=replanned),
+            width="stretch",
+            hide_index=True,
+        )
+
+    st.subheader("Current Engagement Phase")
+    st.info(phase)
+
+    st.subheader("Agency Delivery Brief")
+    st.dataframe(
+        executive_delivery_chain(package_path.name),
+        width="stretch",
+        hide_index=True,
+    )
+
+    st.divider()
+    st.header("Business Constraints — Live Replanning")
+    st.write(
+        "Change a constraint and Hermes will preserve completed evidence, rerun only the "
+        "planner and validation specialist, and publish a revised plan."
+    )
+    constraint_columns = st.columns(3)
+    with constraint_columns[0]:
+        st.number_input(
+            "Budget (USD)",
+            min_value=1_000_000.0,
+            max_value=original_budget,
+            step=50_000.0,
+            key="agency_budget",
+            on_change=request_agency_replan,
+        )
+    with constraint_columns[1]:
+        st.slider(
+            "Downtime (hours)",
+            min_value=0,
+            max_value=24,
+            key="agency_downtime",
+            on_change=request_agency_replan,
+        )
+    with constraint_columns[2]:
+        st.selectbox(
+            "Business Priority",
+            (
+                "Customer Analytics Continuity",
+                "Supply Chain Resilience",
+                "Operating Cost Reduction",
+            ),
+            key="agency_business_priority",
+            on_change=request_agency_replan,
+        )
+
+    st.button(
+        "Apply 30% Budget Reduction",
+        type="primary",
+        on_click=apply_thirty_percent_reduction,
+    )
+
+    if st.session_state["agency_replan_requested"]:
+        replan_completed = False
+        try:
+            agency_replan = replan_for_constraints(
+                assessment,
+                original_budget_usd=original_budget,
+                new_budget_usd=float(st.session_state["agency_budget"]),
+                downtime_hours=int(st.session_state["agency_downtime"]),
+                business_priority=st.session_state["agency_business_priority"],
+            )
+            replan_artifact = store_replan_artifact(agency_replan, REPLAN_OUTPUT_DIR)
+            st.session_state["agency_replan"] = agency_replan
+            st.session_state["agency_replan_artifact"] = str(replan_artifact)
+            replan_completed = True
+        except (RuntimeError, ValueError) as exc:
+            st.session_state.pop("agency_replan", None)
+            st.session_state.pop("agency_replan_artifact", None)
+            st.error(f"Hermes could not create the revised plan. {exc}")
+        finally:
+            st.session_state["agency_replan_requested"] = False
+        if replan_completed:
+            st.rerun()
+
+    st.subheader("Original Plan")
+    original_plan = create_plan(assessment, original_budget)
+    st.dataframe(original_plan, width="stretch", hide_index=True)
+
+    if "agency_replan" in st.session_state:
+        agency_replan = st.session_state["agency_replan"]
+        st.success(
+            f"Hermes created a new plan for a "
+            f"{agency_replan['budget_reduction_percent']:.1f}% budget reduction and stored "
+            f"`{Path(st.session_state['agency_replan_artifact']).name}`."
+        )
+        reuse_columns = st.columns(2)
+        with reuse_columns[0]:
+            st.markdown("**Reused—no rerun**")
+            for item in agency_replan["reused"]:
+                st.write(f"- {item}")
+        with reuse_columns[1]:
+            st.markdown("**Rerun by Hermes**")
+            for item in agency_replan["rerun"]:
+                st.write(f"- {item}")
+
+        st.subheader("New Plan")
+        st.dataframe(agency_replan["new_plan"], width="stretch", hide_index=True)
+        st.subheader("What Changed")
+        st.dataframe(agency_replan["what_changed"], width="stretch", hide_index=True)
+        st.subheader("Why")
+        st.write(agency_replan["why"])
+
+        value_columns = st.columns(3)
+        value_columns[0].metric(
+            "Full Replan Effort", f"{agency_replan['full_replan_hours']} hours"
+        )
+        value_columns[1].metric(
+            "Incremental Replan", f"{agency_replan['incremental_replan_hours']} hours"
+        )
+        value_columns[2].metric(
+            "Time Saved", f"{agency_replan['time_saved_hours']} hours", delta="64% faster"
+        )
+        st.write(f"**Validation result:** {agency_replan['validation_result']}")

@@ -9,3 +9,4 @@ __pycache__/
 generated_packages/*.zip
 generated_packages/assessments/*.json
 generated_packages/implementation/*.zip
+generated_packages/replans/*.json
