@@ -11,7 +11,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 import pandas as pd
 
-from engine.data_loader import DataLoadError, load_json_safely, load_portfolio
+from .data_loader import DataLoadError, load_json_safely, load_portfolio
 
 
 CANDIDATE_ID = "APX-PLT-001"

@@ -9,7 +9,7 @@ from uuid import uuid4
 
 import pandas as pd
 
-from engine.data_loader import DataLoadError, load_json_safely
+from .data_loader import DataLoadError, load_json_safely
 
 
 AGENT_SEQUENCE = [
