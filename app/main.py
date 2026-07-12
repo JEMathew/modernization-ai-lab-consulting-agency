@@ -1,6 +1,7 @@
 """Streamlit entry point for the Modernization AI Lab consulting engagement."""
 
 from datetime import datetime, timezone
+from html import escape
 from pathlib import Path
 
 import streamlit as st
@@ -47,15 +48,151 @@ def apply_thirty_percent_reduction() -> None:
     )
     st.session_state["agency_replan_requested"] = True
 
+
+def render_agent_cards(operations) -> None:
+    icons = ["◆", "◈", "◇", "◉", "⬡", "✓"]
+    columns = st.columns(3)
+    for index, (_, agent) in enumerate(operations.iterrows()):
+        status_class = "status-active" if agent["Current Status"] == "Directing" else "status-ready"
+        with columns[index % 3]:
+            st.markdown(
+                f"""
+                <div class="agent-card">
+                    <div class="agent-card-top">
+                        <span class="agent-icon">{icons[index]}</span>
+                        <span class="agent-status {status_class}">{escape(str(agent['Current Status']))}</span>
+                    </div>
+                    <div class="agent-name">{escape(str(agent['Agent']))}</div>
+                    <div class="agent-role">{escape(str(agent['Role']))}</div>
+                    <div class="agent-task">{escape(str(agent['Task']))}</div>
+                    <div class="agent-meta">
+                        <span>Confidence <strong>{escape(str(agent['Confidence']))}</strong></span>
+                        <span>{escape(str(agent['Duration']))}</span>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+
+def render_timeline(events) -> None:
+    timeline_parts = ['<div class="agency-timeline">']
+    for _, event in events.iterrows():
+        timeline_parts.append(
+            f'<div class="timeline-event"><div class="timeline-marker"></div>'
+            f'<div class="timeline-time">{escape(str(event["Time"]))}</div>'
+            f'<div class="timeline-copy"><strong>{escape(str(event["Agent"]))}</strong>'
+            f'<span>{escape(str(event["Event"]))} · {escape(str(event["Result"]))}</span>'
+            f'</div></div>'
+        )
+    timeline_parts.append("</div>")
+    st.markdown("".join(timeline_parts), unsafe_allow_html=True)
+
+
+def render_deliverable_cards(deliverables) -> None:
+    icons = ["✦", "◎", "▣", "◒", "✓"]
+    columns = st.columns(5)
+    for index, (_, deliverable) in enumerate(deliverables.iterrows()):
+        with columns[index]:
+            st.markdown(
+                f"""
+                <div class="deliverable-card">
+                    <div class="deliverable-icon">{icons[index]}</div>
+                    <div class="deliverable-stage">{escape(str(deliverable['Stage']))}</div>
+                    <div class="deliverable-status">{escape(str(deliverable['Status']))}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
 load_dotenv(ROOT_DIR / ".env")
 
 st.set_page_config(page_title="Modernization AI Lab", page_icon="🏭", layout="wide")
 
-st.title("Modernization AI Lab")
-st.subheader("AI Modernization Agency for Enterprise Data Platforms")
-st.info(
-    "All organizations, systems, volumes, costs, and recommendations shown are "
-    "synthetic and created solely for demonstration."
+st.markdown(
+    """
+    <style>
+        :root {
+            --ink: #15233b;
+            --muted: #61708a;
+            --navy: #0b1f3a;
+            --blue: #2563eb;
+            --teal: #0f9f8f;
+            --purple: #7057d9;
+            --surface: #f6f8fc;
+            --line: #dfe6f1;
+        }
+        .stApp { background: linear-gradient(180deg, #f8faff 0%, #ffffff 34rem); color: var(--ink); }
+        .block-container { max-width: 1500px; padding-top: 2rem; padding-bottom: 5rem; }
+        h1, h2, h3 { color: var(--navy); letter-spacing: -0.02em; }
+        h2 { margin-top: 2.5rem !important; }
+        [data-testid="stMetric"] {
+            background: rgba(255,255,255,.9); border: 1px solid var(--line);
+            border-radius: 14px; padding: 1rem 1.1rem; box-shadow: 0 8px 24px rgba(26,54,93,.06);
+        }
+        [data-testid="stDataFrame"] { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+        [data-testid="stStatusWidget"], [data-testid="stAlert"] { border-radius: 14px; }
+        .stButton > button, .stDownloadButton > button { border-radius: 10px; font-weight: 650; }
+        .hero-panel {
+            background: linear-gradient(125deg, #0b1f3a 0%, #153f71 58%, #0f766e 120%);
+            border-radius: 22px; padding: 2.1rem 2.3rem; color: white;
+            box-shadow: 0 20px 50px rgba(11,31,58,.18); margin-bottom: 1rem;
+        }
+        .hero-kicker { color: #7dd3fc; font-size: .78rem; font-weight: 750; letter-spacing: .16em; text-transform: uppercase; }
+        .hero-title { font-size: 2.45rem; font-weight: 760; letter-spacing: -.04em; margin: .35rem 0 .25rem; }
+        .hero-subtitle { color: #d8e8f8; font-size: 1.08rem; max-width: 780px; }
+        .disclaimer-panel { border-left: 3px solid var(--teal); background: #eefbf8; color: #28544e; padding: .8rem 1rem; border-radius: 0 10px 10px 0; margin: 1rem 0 1.25rem; }
+        .stage-card { min-height: 88px; border: 1px solid var(--line); border-radius: 13px; background: white; padding: .8rem; box-shadow: 0 5px 18px rgba(27,51,84,.05); }
+        .stage-card.complete { border-color: #a7e2d8; background: #f0fdfa; }
+        .stage-card.current { border-color: #8eb1ff; background: #eff6ff; box-shadow: 0 8px 24px rgba(37,99,235,.12); }
+        .stage-number { color: var(--blue); font-size: .72rem; font-weight: 800; letter-spacing: .12em; }
+        .stage-label { color: var(--navy); font-size: .9rem; font-weight: 700; margin-top: .35rem; line-height: 1.25; }
+        .section-eyebrow { color: var(--blue); font-size: .74rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; margin-bottom: -.6rem; }
+        .summary-card { background: linear-gradient(135deg, #eff6ff, #f5f3ff); border: 1px solid #cbd9f5; border-radius: 18px; padding: 1.5rem 1.7rem; box-shadow: 0 10px 32px rgba(55,78,132,.08); }
+        .summary-label { color: var(--purple); font-size: .75rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+        .summary-title { color: var(--navy); font-size: 1.28rem; font-weight: 750; margin: .35rem 0 .5rem; }
+        .summary-body { color: #40516d; line-height: 1.65; }
+        .agent-card { min-height: 218px; background: white; border: 1px solid var(--line); border-radius: 16px; padding: 1.15rem; margin-bottom: 1rem; box-shadow: 0 8px 26px rgba(22,45,78,.07); }
+        .agent-card-top { display: flex; align-items: center; justify-content: space-between; }
+        .agent-icon { color: var(--teal); font-size: 1.4rem; }
+        .agent-status { font-size: .7rem; font-weight: 800; padding: .25rem .5rem; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; }
+        .status-active { color: #1d4ed8; background: #dbeafe; }
+        .status-ready { color: #087568; background: #d9f7f1; }
+        .agent-name { color: var(--navy); font-weight: 760; font-size: 1.05rem; margin-top: .85rem; }
+        .agent-role { color: var(--purple); font-size: .78rem; font-weight: 700; margin-top: .15rem; }
+        .agent-task { color: var(--muted); font-size: .86rem; line-height: 1.45; margin: .8rem 0; min-height: 52px; }
+        .agent-meta { border-top: 1px solid #edf1f7; padding-top: .7rem; display: flex; justify-content: space-between; color: var(--muted); font-size: .76rem; }
+        .agency-timeline { border-left: 2px solid #bfdbfe; margin: .6rem 0 1.25rem 5rem; padding-left: 1.4rem; }
+        .timeline-event { position: relative; display: grid; grid-template-columns: 80px 1fr; gap: .75rem; padding: 0 0 1.15rem; }
+        .timeline-marker { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: var(--blue); border: 3px solid #dbeafe; left: -1.82rem; top: .2rem; }
+        .timeline-time { color: var(--blue); font-size: .76rem; font-weight: 750; }
+        .timeline-copy { display: flex; flex-direction: column; color: var(--navy); font-size: .88rem; }
+        .timeline-copy span { color: var(--muted); font-size: .8rem; margin-top: .15rem; }
+        .deliverable-card { min-height: 150px; background: white; border: 1px solid var(--line); border-top: 3px solid var(--teal); border-radius: 14px; padding: 1rem; box-shadow: 0 7px 22px rgba(24,50,82,.06); }
+        .deliverable-icon { color: var(--teal); font-size: 1.25rem; }
+        .deliverable-stage { color: var(--navy); font-size: .82rem; font-weight: 750; margin-top: .65rem; line-height: 1.3; }
+        .deliverable-status { color: var(--purple); font-size: .72rem; font-weight: 750; margin-top: .55rem; }
+        @media (max-width: 900px) { .hero-title { font-size: 2rem; } .deliverable-card { min-height: auto; } }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    """
+    <div class="hero-panel">
+        <div class="hero-kicker">Enterprise AI Consulting Engagement</div>
+        <div class="hero-title">Modernization AI Lab</div>
+        <div class="hero-subtitle">AI Modernization Agency for Enterprise Data Platforms</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+st.markdown(
+    """
+    <div class="disclaimer-panel">◌ All organizations, systems, volumes, costs, and recommendations shown are synthetic and created solely for demonstration.</div>
+    """,
+    unsafe_allow_html=True,
 )
 
 stages = [
@@ -65,9 +202,27 @@ stages = [
     "Implementation Ready Package",
     "Executive Review",
 ]
+completed_stage = 0
+if "enterprise_profile" in st.session_state:
+    completed_stage = 1
+if "assessment" in st.session_state:
+    completed_stage = 3
+if "engineering_engagement" in st.session_state:
+    completed_stage = 4
+
 stage_columns = st.columns(len(stages))
 for index, (column, stage) in enumerate(zip(stage_columns, stages), start=1):
-    column.markdown(f"**{index}. {stage}**")
+    stage_class = "complete" if index <= completed_stage else "current" if index == completed_stage + 1 else ""
+    column.markdown(
+        f"""
+        <div class="stage-card {stage_class}">
+            <div class="stage-number">0{index}</div>
+            <div class="stage-label">{escape(stage)}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+st.progress(completed_stage / len(stages), text=f"Engagement progress · {completed_stage} of {len(stages)} stages complete")
 
 st.divider()
 st.header("Intake")
@@ -97,6 +252,7 @@ else:
             st.session_state.pop("implementation_package", None)
             st.session_state.pop("agency_replan", None)
             st.session_state.pop("agency_replan_artifact", None)
+            st.rerun()
         except DataLoadError as exc:
             st.session_state.pop("enterprise_profile", None)
             st.session_state.pop("portfolio", None)
@@ -159,6 +315,7 @@ if "enterprise_profile" in st.session_state and "portfolio" in st.session_state:
             st.session_state.pop("implementation_package", None)
             st.session_state.pop("agency_replan", None)
             st.session_state.pop("agency_replan_artifact", None)
+            st.rerun()
         except (RuntimeError, ValueError) as exc:
             st.session_state.pop("assessment", None)
             st.session_state.pop("assessment_artifact", None)
@@ -260,6 +417,7 @@ if "assessment" in st.session_state:
             st.session_state["implementation_package"] = str(implementation_package)
             st.session_state.pop("agency_replan", None)
             st.session_state.pop("agency_replan_artifact", None)
+            st.rerun()
         except (DataLoadError, RuntimeError, ValueError) as exc:
             st.session_state.pop("engineering_engagement", None)
             st.session_state.pop("implementation_package", None)
@@ -384,7 +542,16 @@ if "engineering_engagement" in st.session_state:
             st.write(f"- {item}")
 
     st.header("8. Implementation Ready Package")
-    st.write(engineering["executive_summary"])
+    st.markdown(
+        f"""
+        <div class="summary-card">
+            <div class="summary-label">Executive Summary</div>
+            <div class="summary-title">Oracle Customer Analytics Warehouse → BigQuery</div>
+            <div class="summary-body">{escape(str(engineering['executive_summary']))}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     st.caption(f"Executive summary source: {engineering['narrative_source']}")
     st.download_button(
         "Download Implementation Ready Package",
@@ -446,22 +613,19 @@ if "engineering_engagement" in st.session_state:
         st.write("Specialists are coordinated through deterministic handoffs and stored artifacts.")
         st.progress(1.0, text="Agency delivery evidence synchronized")
 
-    st.subheader("Visible Agent Team")
-    st.markdown(
-        "### Hermes\n↓\n### Assessment Specialist\n↓\n### 6R Specialist\n↓\n"
-        "### Prioritization Specialist\n↓\n### Engineering Specialist\n↓\n"
-        "### Validation Specialist"
-    )
-    st.dataframe(
-        build_agent_operations(agency_start, replanned=replanned),
-        width="stretch",
-        hide_index=True,
-    )
+    st.markdown('<div class="section-eyebrow">Agency Roster</div>', unsafe_allow_html=True)
+    st.subheader("Agent Cards")
+    operations = build_agent_operations(agency_start, replanned=replanned)
+    render_agent_cards(operations)
+    with st.expander("View complete agent operating details"):
+        st.dataframe(operations, width="stretch", hide_index=True)
 
     timeline_tabs = st.tabs(["Agent Timeline", "Manager Timeline"])
     with timeline_tabs[0]:
+        agent_events = agent_timeline(agency_start, replanned=replanned)
+        render_timeline(agent_events)
         st.dataframe(
-            agent_timeline(agency_start, replanned=replanned),
+            agent_events,
             width="stretch",
             hide_index=True,
         )
@@ -472,12 +636,19 @@ if "engineering_engagement" in st.session_state:
             hide_index=True,
         )
 
-    st.subheader("Current Engagement Phase")
-    st.info(phase)
+    st.markdown('<div class="section-eyebrow">Live Engagement</div>', unsafe_allow_html=True)
+    st.subheader("Current Engagement Status")
+    status_columns = st.columns(3)
+    status_columns[0].metric("Current Phase", phase)
+    status_columns[1].metric("Active Manager", "Hermes")
+    status_columns[2].metric("Approval", "Pending Human Approval")
 
-    st.subheader("Agency Delivery Brief")
+    st.markdown('<div class="section-eyebrow">Consulting Outputs</div>', unsafe_allow_html=True)
+    st.subheader("Consulting Deliverables")
+    delivery_chain = executive_delivery_chain(package_path.name)
+    render_deliverable_cards(delivery_chain)
     st.dataframe(
-        executive_delivery_chain(package_path.name),
+        delivery_chain,
         width="stretch",
         hide_index=True,
     )
