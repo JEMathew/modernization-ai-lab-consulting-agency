@@ -1,0 +1,54 @@
+{
+  "pipeline_id": "APX-ETL-CAW-001",
+  "pipeline_name": "Customer Analytics Nightly Load",
+  "platform": "Informatica PowerCenter 10.4",
+  "schedule": "Daily at 01:00 America/Los_Angeles",
+  "service_level_target": "Complete by 05:00 local time",
+  "source_systems": [
+    "CRM Customer Hub",
+    "Order Management System",
+    "Field Service Platform"
+  ],
+  "target_system": "Oracle Customer Analytics Warehouse",
+  "steps": [
+    {
+      "sequence": 1,
+      "name": "Extract changed customers",
+      "operation": "Incremental database extract",
+      "expected_rows": 85000
+    },
+    {
+      "sequence": 2,
+      "name": "Extract recent orders",
+      "operation": "Incremental database extract",
+      "expected_rows": 420000
+    },
+    {
+      "sequence": 3,
+      "name": "Extract service events",
+      "operation": "Secure API ingestion",
+      "expected_rows": 160000
+    },
+    {
+      "sequence": 4,
+      "name": "Standardize customer identifiers",
+      "operation": "Lookup and survivorship transformation"
+    },
+    {
+      "sequence": 5,
+      "name": "Load dimensions and facts",
+      "operation": "Transactional warehouse load"
+    },
+    {
+      "sequence": 6,
+      "name": "Reconcile and publish",
+      "operation": "Control totals and audit report"
+    }
+  ],
+  "failure_policy": {
+    "maximum_retries": 2,
+    "on_failure": "Stop downstream publication and notify Data Operations",
+    "recovery": "Restart from last successful checkpoint"
+  },
+  "synthetic": true
+}

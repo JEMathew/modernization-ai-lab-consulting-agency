@@ -1,0 +1,9 @@
+dependency_id,upstream_platform_id,downstream_platform_id,interface_type,frequency,business_process,criticality
+APX-DEP-001,APX-PLT-005,APX-PLT-001,Batch ETL,Daily,Customer analytics data load,Critical
+APX-DEP-002,APX-PLT-005,APX-PLT-002,Batch ETL,Hourly,Supply chain planning data load,Critical
+APX-DEP-003,APX-PLT-005,APX-PLT-004,Batch ETL,Hourly,Plant operations reporting,High
+APX-DEP-004,APX-PLT-001,APX-PLT-006,JDBC query,Daily,Executive customer scorecard,High
+APX-DEP-005,APX-PLT-002,APX-PLT-006,JDBC query,Daily,Executive supply chain scorecard,Critical
+APX-DEP-006,APX-PLT-004,APX-PLT-007,Batch extract,Daily,Manufacturing quality reconciliation,Medium
+APX-DEP-007,APX-PLT-003,APX-PLT-007,Secure file transfer,Weekly,Engineering defect correlation,Medium
+APX-DEP-008,APX-PLT-002,APX-PLT-004,REST API,Hourly,Material availability reporting,High

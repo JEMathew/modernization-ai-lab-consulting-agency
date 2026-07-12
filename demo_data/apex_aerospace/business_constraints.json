@@ -1,0 +1,31 @@
+{
+  "enterprise_id": "APEX-AERO-001",
+  "currency": "USD",
+  "annual_modernization_budget_usd": 8500000,
+  "maximum_planned_downtime_hours": 8,
+  "program_horizon_months": 24,
+  "data_residency": [
+    "United States customer data must remain in approved US regions",
+    "European customer data must comply with GDPR residency controls"
+  ],
+  "regulatory_requirements": [
+    "Export-controlled engineering data requires access segregation",
+    "Financial reporting data requires auditable lineage and retention",
+    "Customer personal data requires encryption in transit and at rest"
+  ],
+  "operational_blackout_periods": [
+    {
+      "name": "Quarter-end close",
+      "window": "Last five business days of each fiscal quarter"
+    },
+    {
+      "name": "Annual production ramp",
+      "window": "October 15 through November 30"
+    }
+  ],
+  "required_capabilities": [
+    "Zero-downtime rollback for critical reporting",
+    "Reconciled source-to-target record counts",
+    "Documented data ownership and lineage"
+  ]
+}

@@ -1,0 +1,9 @@
+mapping_id,source_platform,source_object,source_column,target_platform,target_object,target_column,transformation_rule,data_classification
+APX-MAP-001,Oracle Customer Analytics Warehouse,CUSTOMER_DIM,CUSTOMER_ID,BigQuery Customer Analytics,customer_dim,customer_id,Cast NUMBER to INT64,Internal
+APX-MAP-002,Oracle Customer Analytics Warehouse,CUSTOMER_DIM,CUSTOMER_NAME,BigQuery Customer Analytics,customer_dim,customer_name,Trim whitespace and preserve Unicode,Customer PII
+APX-MAP-003,Oracle Customer Analytics Warehouse,CUSTOMER_DIM,EMAIL_ADDRESS,BigQuery Customer Analytics,customer_dim,email_address,Lowercase and validate email format,Customer PII
+APX-MAP-004,Oracle Customer Analytics Warehouse,ORDER_FACT,ORDER_ID,BigQuery Customer Analytics,order_fact,order_id,Cast NUMBER to INT64,Internal
+APX-MAP-005,Oracle Customer Analytics Warehouse,ORDER_FACT,ORDER_DATE,BigQuery Customer Analytics,order_fact,order_date,Convert Oracle DATE to UTC TIMESTAMP,Internal
+APX-MAP-006,Oracle Customer Analytics Warehouse,ORDER_FACT,NET_AMOUNT,BigQuery Customer Analytics,order_fact,net_amount,Cast NUMBER(18 2) to NUMERIC,Commercially Sensitive
+APX-MAP-007,Oracle Customer Analytics Warehouse,SERVICE_EVENT_FACT,SERIAL_NUMBER,BigQuery Customer Analytics,service_event_fact,serial_number,Trim and uppercase,Export Controlled
+APX-MAP-008,Oracle Customer Analytics Warehouse,SERVICE_EVENT_FACT,EVENT_TIMESTAMP,BigQuery Customer Analytics,service_event_fact,event_timestamp,Convert timestamp to UTC,Internal

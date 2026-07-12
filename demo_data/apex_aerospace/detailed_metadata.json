@@ -1,0 +1,101 @@
+{
+  "enterprise_id": "APEX-AERO-001",
+  "captured_at": "2026-06-30T18:00:00Z",
+  "platforms": [
+    {
+      "platform_id": "APX-PLT-001",
+      "platform_name": "Oracle Customer Analytics Warehouse",
+      "database_count": 6,
+      "schema_count": 42,
+      "table_count": 1380,
+      "monthly_active_users": 460,
+      "daily_batch_jobs": 214,
+      "data_growth_percent_per_year": 24,
+      "availability_target_percent": 99.9,
+      "recovery_time_objective_hours": 4,
+      "recovery_point_objective_minutes": 30,
+      "sensitive_data_classes": ["Customer PII", "Commercial pricing"],
+      "notes": "Designated future flagship candidate for the demonstration; no priority score is assigned in Sprint 1."
+    },
+    {
+      "platform_id": "APX-PLT-002",
+      "platform_name": "Teradata Supply Chain Warehouse",
+      "database_count": 4,
+      "schema_count": 61,
+      "table_count": 2460,
+      "monthly_active_users": 720,
+      "daily_batch_jobs": 338,
+      "data_growth_percent_per_year": 18,
+      "availability_target_percent": 99.95,
+      "recovery_time_objective_hours": 2,
+      "recovery_point_objective_minutes": 15,
+      "sensitive_data_classes": ["Supplier contracts", "Production schedules"]
+    },
+    {
+      "platform_id": "APX-PLT-003",
+      "platform_name": "Hadoop Engineering Data Lake",
+      "cluster_nodes": 84,
+      "dataset_count": 9200,
+      "monthly_active_users": 310,
+      "daily_batch_jobs": 146,
+      "data_growth_percent_per_year": 37,
+      "availability_target_percent": 99.5,
+      "recovery_time_objective_hours": 12,
+      "recovery_point_objective_minutes": 240,
+      "sensitive_data_classes": ["Export-controlled technical data", "Aircraft telemetry"]
+    },
+    {
+      "platform_id": "APX-PLT-004",
+      "platform_name": "SQL Server Plant Reporting",
+      "database_count": 18,
+      "schema_count": 76,
+      "table_count": 1860,
+      "monthly_active_users": 1250,
+      "daily_batch_jobs": 96,
+      "data_growth_percent_per_year": 12,
+      "availability_target_percent": 99.7,
+      "recovery_time_objective_hours": 4,
+      "recovery_point_objective_minutes": 60,
+      "sensitive_data_classes": ["Employee identifiers", "Production performance"]
+    },
+    {
+      "platform_id": "APX-PLT-005",
+      "platform_name": "Informatica Enterprise ETL",
+      "repository_count": 3,
+      "workflow_count": 1840,
+      "monthly_active_users": 95,
+      "daily_batch_jobs": 1275,
+      "data_growth_percent_per_year": 9,
+      "availability_target_percent": 99.9,
+      "recovery_time_objective_hours": 2,
+      "recovery_point_objective_minutes": 30,
+      "sensitive_data_classes": ["Credentials metadata", "Cross-domain data movement"]
+    },
+    {
+      "platform_id": "APX-PLT-006",
+      "platform_name": "Cognos Executive BI",
+      "report_count": 1260,
+      "monthly_active_users": 890,
+      "scheduled_reports": 410,
+      "data_growth_percent_per_year": 8,
+      "availability_target_percent": 99.9,
+      "recovery_time_objective_hours": 4,
+      "recovery_point_objective_minutes": 60,
+      "sensitive_data_classes": ["Financial results", "Executive metrics"]
+    },
+    {
+      "platform_id": "APX-PLT-007",
+      "platform_name": "DB2 Quality Management Mart",
+      "database_count": 2,
+      "schema_count": 18,
+      "table_count": 640,
+      "monthly_active_users": 270,
+      "daily_batch_jobs": 54,
+      "data_growth_percent_per_year": 11,
+      "availability_target_percent": 99.5,
+      "recovery_time_objective_hours": 8,
+      "recovery_point_objective_minutes": 120,
+      "sensitive_data_classes": ["Product quality", "Supplier performance"]
+    }
+  ]
+}
