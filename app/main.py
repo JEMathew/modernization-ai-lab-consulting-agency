@@ -12,11 +12,17 @@ from engine.assessment import (
     store_assessment_artifact,
 )
 from engine.data_loader import DataLoadError, load_enterprise_profile, load_portfolio
+from engine.engineering import (
+    build_engineering_engagement,
+    generate_implementation_package,
+    package_bytes,
+)
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 APEX_DATA_DIR = ROOT_DIR / "demo_data" / "apex_aerospace"
 ASSESSMENT_OUTPUT_DIR = ROOT_DIR / "generated_packages" / "assessments"
+IMPLEMENTATION_OUTPUT_DIR = ROOT_DIR / "generated_packages" / "implementation"
 
 load_dotenv(ROOT_DIR / ".env")
 
@@ -64,6 +70,8 @@ else:
             st.session_state["portfolio"] = load_portfolio(APEX_DATA_DIR / "portfolio.csv")
             st.session_state.pop("assessment", None)
             st.session_state.pop("assessment_artifact", None)
+            st.session_state.pop("engineering_engagement", None)
+            st.session_state.pop("implementation_package", None)
         except DataLoadError as exc:
             st.session_state.pop("enterprise_profile", None)
             st.session_state.pop("portfolio", None)
@@ -122,6 +130,8 @@ if "enterprise_profile" in st.session_state and "portfolio" in st.session_state:
             )
             st.session_state["assessment"] = assessment
             st.session_state["assessment_artifact"] = str(artifact_path)
+            st.session_state.pop("engineering_engagement", None)
+            st.session_state.pop("implementation_package", None)
         except (RuntimeError, ValueError) as exc:
             st.session_state.pop("assessment", None)
             st.session_state.pop("assessment_artifact", None)
@@ -202,3 +212,171 @@ if "assessment" in st.session_state:
     st.subheader("Hermes — Modernization Director")
     st.markdown("**Consulting Recommendation**")
     st.write(consulting_recommendation(candidate))
+
+    st.divider()
+    st.header("Modernization Engineering Engagement")
+    st.write(
+        "Prepare the implementation-ready starter package for the selected Oracle Customer "
+        "Analytics Warehouse modernization to BigQuery."
+    )
+    st.caption(
+        "Engineering mappings, conversions, controls, and package artifacts are generated "
+        "deterministically. Narrative sections use the offline deterministic fallback."
+    )
+    if st.button("Prepare Implementation Ready Package", type="primary"):
+        try:
+            engineering_engagement = build_engineering_engagement(APEX_DATA_DIR)
+            implementation_package = generate_implementation_package(
+                engineering_engagement, IMPLEMENTATION_OUTPUT_DIR
+            )
+            st.session_state["engineering_engagement"] = engineering_engagement
+            st.session_state["implementation_package"] = str(implementation_package)
+        except (DataLoadError, RuntimeError, ValueError) as exc:
+            st.session_state.pop("engineering_engagement", None)
+            st.session_state.pop("implementation_package", None)
+            st.error(f"The implementation package could not be prepared. {exc}")
+
+if "engineering_engagement" in st.session_state:
+    engineering = st.session_state["engineering_engagement"]
+    package_path = Path(st.session_state["implementation_package"])
+
+    st.success(
+        "Implementation-ready package generated and stored as "
+        f"`{package_path.name}`."
+    )
+
+    st.header("1. Metadata Discovery")
+    metadata = engineering["metadata"]
+    metadata_columns = st.columns(4)
+    metadata_columns[0].metric("Schemas", f"{metadata['schemas']:,}")
+    metadata_columns[1].metric("Tables", f"{metadata['tables']:,}")
+    metadata_columns[2].metric("Views", f"{metadata['views']:,}")
+    metadata_columns[3].metric("Stored Procedures", f"{metadata['stored_procedures']:,}")
+    metadata_columns = st.columns(4)
+    metadata_columns[0].metric("ETL Jobs", f"{metadata['etl_jobs']:,}")
+    metadata_columns[1].metric("Reports", f"{metadata['reports']:,}")
+    metadata_columns[2].metric("Data Volume", f"{metadata['data_volume_tb']:,} TB")
+    metadata_columns[3].metric("Named Owners", f"{len(metadata['owners']):,}")
+    st.subheader("Owners")
+    owner_rows = [
+        {"Accountability": role.replace("_", " ").title(), "Owner": owner}
+        for role, owner in metadata["owners"].items()
+    ]
+    st.dataframe(owner_rows, width="stretch", hide_index=True)
+
+    st.header("2. Dependency Analysis")
+    dependencies = engineering["dependencies"]
+    dependency_columns = st.columns(2)
+    with dependency_columns[0]:
+        st.subheader("Upstream")
+        for upstream in dependencies["upstream"]:
+            st.write(f"- {upstream}")
+    with dependency_columns[1]:
+        st.subheader("Downstream")
+        for downstream in dependencies["downstream"]:
+            st.write(f"- {downstream}")
+    st.subheader("Critical Dependencies")
+    st.dataframe(
+        dependencies["critical_dependencies"].rename(
+            columns={
+                "upstream": "Upstream",
+                "downstream": "Downstream",
+                "interface_type": "Interface",
+                "frequency": "Frequency",
+                "criticality": "Criticality",
+                "business_process": "Business Process",
+                "business_impact": "Business Impact",
+            }
+        ),
+        width="stretch",
+        hide_index=True,
+    )
+    st.subheader("Dependency Graph")
+    st.graphviz_chart(dependencies["graph_dot"], width="stretch")
+    st.subheader("Business Impact")
+    for impact in dependencies["business_impact"]:
+        st.write(f"- {impact}")
+
+    st.header("3. Target Architecture")
+    architecture = engineering["architecture"]
+    st.markdown(f"### {architecture['flow']}")
+    st.dataframe(
+        architecture["layers"].rename(
+            columns={
+                "sequence": "Sequence",
+                "component": "Component",
+                "role": "Role",
+                "why": "Why",
+            }
+        ),
+        width="stretch",
+        hide_index=True,
+    )
+    st.markdown("**Why this architecture**")
+    st.write(architecture["explanation"])
+    st.caption(f"Narrative source: {architecture['narrative_source']}")
+
+    st.header("4. Source-to-Target Mapping")
+    st.dataframe(engineering["mapping"], width="stretch", hide_index=True)
+
+    st.header("5. SQL Modernization")
+    sql_tabs = st.tabs(["Oracle Source SQL", "BigQuery SQL", "Target DDL", "Assumptions"])
+    with sql_tabs[0]:
+        st.code(engineering["sql"]["source_sql"], language="sql")
+    with sql_tabs[1]:
+        st.code(engineering["sql"]["bigquery_sql"], language="sql")
+    with sql_tabs[2]:
+        st.code(engineering["sql"]["target_ddl"], language="sql")
+    with sql_tabs[3]:
+        for assumption in engineering["sql"]["assumptions"]:
+            st.write(f"- {assumption}")
+
+    st.header("6. ETL Modernization")
+    etl = engineering["etl"]
+    st.write(f"**Informatica pipeline:** {etl['pipeline_name']}")
+    st.write(f"**Cloud-native pipeline:** {etl['target_pipeline']}")
+    st.write(f"**Orchestration:** {etl['orchestration']}")
+    st.write(etl["explanation"])
+    st.dataframe(etl["steps"], width="stretch", hide_index=True)
+    st.write(f"**Failure policy:** {etl['failure_policy']}")
+    st.caption(f"Narrative source: {etl['narrative_source']}")
+
+    st.header("7. Validation")
+    validation = engineering["validation"]
+    st.dataframe(validation["controls"], width="stretch", hide_index=True)
+    validation_columns = st.columns(2)
+    with validation_columns[0]:
+        st.subheader("Business Rule Validation")
+        for rule in validation["business_rules"]:
+            st.write(f"- {rule}")
+    with validation_columns[1]:
+        st.subheader("Manual Review Items")
+        for item in validation["manual_review_items"]:
+            st.write(f"- {item}")
+
+    st.header("8. Implementation Ready Package")
+    st.write(engineering["executive_summary"])
+    st.caption(f"Executive summary source: {engineering['narrative_source']}")
+    st.download_button(
+        "Download Implementation Ready Package",
+        data=package_bytes(package_path),
+        file_name=package_path.name,
+        mime="application/zip",
+        type="primary",
+    )
+    st.write(
+        "Package contents: Executive Summary, Architecture, Source Target Mapping, "
+        "Converted SQL, Target DDL, ETL Translation, Validation Report, Implementation "
+        "Backlog, Assumptions, Decision Log, and manifest."
+    )
+    st.subheader("Implementation Backlog")
+    st.dataframe(engineering["backlog"], width="stretch", hide_index=True)
+    package_columns = st.columns(2)
+    with package_columns[0]:
+        st.subheader("Assumptions")
+        for assumption in engineering["assumptions"]:
+            st.write(f"- {assumption}")
+    with package_columns[1]:
+        st.subheader("Decision Log")
+        for index, decision in enumerate(engineering["decision_log"], start=1):
+            st.write(f"{index}. {decision}")

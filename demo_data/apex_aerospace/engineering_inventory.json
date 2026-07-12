@@ -1,0 +1,19 @@
+{
+  "platform_id": "APX-PLT-001",
+  "platform_name": "Oracle Customer Analytics Warehouse",
+  "catalog_captured_at": "2026-06-30T18:00:00Z",
+  "schemas": 42,
+  "tables": 1380,
+  "views": 214,
+  "stored_procedures": 96,
+  "etl_jobs": 214,
+  "reports": 187,
+  "data_volume_tb": 185,
+  "owners": {
+    "business_owner": "VP Customer Experience",
+    "technical_owner": "Director Data Platforms",
+    "data_steward": "Customer Analytics Governance Lead",
+    "operations_owner": "Enterprise Data Operations"
+  },
+  "inventory_note": "Synthetic implementation inventory captured for the Engagement 3 engineering demonstration."
+}

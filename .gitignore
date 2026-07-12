@@ -8,3 +8,4 @@ __pycache__/
 .streamlit/
 generated_packages/*.zip
 generated_packages/assessments/*.json
+generated_packages/implementation/*.zip

@@ -64,3 +64,23 @@ The priority score is a bounded 0–100 weighted calculation:
 ```
 
 Completed assessment runs are stored as JSON artifacts under `generated_packages/assessments/`. Runtime artifacts are intentionally excluded from Git.
+
+## Engagement 3: Modernization Engineering
+
+After the Oracle Customer Analytics Warehouse is selected, click **Prepare Implementation Ready Package** to run the engineering engagement. The application displays metadata discovery, dependency analysis and graph, the Oracle-to-Google-Cloud target architecture, source-to-target mappings, converted BigQuery SQL, target DDL, cloud-native ETL translation, validation controls, manual-review items, and an implementation backlog.
+
+The resulting ZIP is stored under `generated_packages/implementation/` and can be downloaded in the application. It contains:
+
+- Executive Summary
+- Architecture
+- Source Target Mapping
+- Converted SQL
+- Target DDL
+- ETL Translation
+- Validation Report
+- Implementation Backlog
+- Assumptions
+- Decision Log
+- Package manifest
+
+All mappings, conversions, validations, and package contents are deterministic. Architecture, migration, and executive-summary narratives use the deterministic offline fallback; no OpenAI call is required.

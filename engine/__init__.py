@@ -16,6 +16,11 @@ from .data_loader import (
     load_json_safely,
     load_portfolio,
 )
+from .engineering import (
+    build_engineering_engagement,
+    generate_implementation_package,
+    package_bytes,
+)
 
 __all__ = [
     "SCORE_COLUMNS",
@@ -27,6 +32,9 @@ __all__ = [
     "load_enterprise_profile",
     "load_json_safely",
     "load_portfolio",
+    "build_engineering_engagement",
+    "generate_implementation_package",
+    "package_bytes",
     "recommend_6r",
     "select_modernization_candidate",
     "store_assessment_artifact",
